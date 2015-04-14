@@ -1,4 +1,4 @@
-J.test.buildTest("Constructors.DemoConstructor", function(Constructor, Test, TestWaiter, comparer) {
+J.test.buildTest("Constructors.DemoConstructor", function(Constructor, Test, TestWaiter, tools) {
 
 	Test("Dummy Test", function() {
 		var demo = Constructor()

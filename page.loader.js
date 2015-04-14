@@ -36,13 +36,14 @@
 		, scriptNumber = 0
 
 	// if you call this named function with use, load this script then wait and run it
-	dog.useMap = {} // see dog.use
-	var testMethods = String("test.info,test.runAllTests,test.runSubTests,test.runTest,test.run").split(',')
-	dog.useMap["test.attach"] = "jdogTest/j.test.attach.js"
-	dog.useMap["test.setTests"] = "jdogTest/j.test.attach.js"
+	dog._useMap = {} // see dog.use
+	dog._t = "jdogTest/"
+	var testMethods = String("test.info,test.runTest,test.run").split(',')
+	dog._useMap["test.attach"] = dog._t + "j.test.attach.js"
+	dog._useMap["test.setTests"] = dog._t + "j.test.attach.js"
 
 	while(testMethods.length)
-		dog.useMap[ testMethods.shift() ] = "jdogTest/j.test.js"
+		dog._useMap[ testMethods.shift() ] = dog._t + "j.test.js"
 
 	// all existential queries are run through here, this is the foundation of the whole thing
 	var ex = dog.exists = function (path, base, alternate) {
@@ -346,14 +347,19 @@
 	// only useful for functions, not objects, since arguments get passed into them
 	dog.use = function use(name, argsArray) {
 
+		var lastAdd = dog._lastAdd
+			, lastPath = dog._lastPath
+
 		// force to be array inside arguments array
-		argsArray = getType(arguments[1]) === "Arr" ? [argsArray] : [[argsArray]]
+		var argsArray = getType(arguments[1]) === "Arr" ? 
+			[lastAdd, lastPath, argsArray] 
+			: [lastAdd, lastPath, [argsArray]]
 
 		if (dog.exists(name))
 			return dog.exists(name).apply(this, argsArray)
 
-		if (dog.useMap[name]) {
-			dog.loadFile.apply( this, [dog.useMap[name]] )
+		if (dog._useMap[name]) {
+			dog.loadFile.apply( this, [dog._useMap[name]] )
 			.wait(name, function(thing) {
 				thing.apply(this, argsArray)
 			})
@@ -401,13 +407,13 @@
 
 	// store jQuery for instanceof, in case it gets overriden by some other code
 	// this is used by getType, jQuery is so common it needs it's own type!
-	dog.jQuery = window.jQuery
+	dog._jQuery = window.jQuery
 
 	document.addEventListener("DOMContentLoaded", function(event) {
 		dog.ready = true
   })
 
-	dog.version = "3.0.0"
+	dog._version = "3.0.0"
 
 	// jDog and J are psynonymous
 	window.PAGE = window.J = window.jDog = puppy
