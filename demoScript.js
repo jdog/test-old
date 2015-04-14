@@ -1,6 +1,6 @@
 J.addWait(
 	"Constructors.DemoConstructor"
-	, [ "test" ]
+	, [ /* nothing to wait for yet */ ]
 	, function (ref) {
 	
 	return function DemoConstructor (e_root, options) {
@@ -19,9 +19,15 @@ J.addWait(
 			}
 		}
 
+		function god() {
+			console.log("123")
+		}
+
+		god()
+
 		return dog
 
 	}
 
 })
-.use("attachTest", "demoScript.test.js")
+.use("test.attach", "demoScript.test.js")

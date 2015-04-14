@@ -36,11 +36,13 @@
 		, scriptNumber = 0
 
 	// if you call this named function with use, load this script then wait and run it
-	dog.useMap = {
-		attachTest : "scripts/page.test.js"
-		// add your own in your own app
-	}
+	dog.useMap = {} // see dog.use
+	var testMethods = String("test.info,test.runAllTests,test.runSubTests,test.runTest,test.run").split(',')
+	dog.useMap["test.attach"] = "jdogTest/j.test.attach.js"
+	dog.useMap["test.setTests"] = "jdogTest/j.test.attach.js"
 
+	while(testMethods.length)
+		dog.useMap[ testMethods.shift() ] = "jdogTest/j.test.js"
 
 	// all existential queries are run through here, this is the foundation of the whole thing
 	var ex = dog.exists = function (path, base, alternate) {
@@ -147,8 +149,10 @@
 			, count = 0
 			, ref = ref || {}
 
-		if (!arr.length)
+		if (!arr.length) {
 			(callback || emptyFunction)(ref)
+			return puppy
+		}
 
 		for (var x = 0; x < arr.length; x++)
 		(function(index, arr) {
@@ -337,6 +341,28 @@
 	}
 
 
+	// setup a map of method paths, and files to load to get them
+	// this is used by page.test.js as a way of loading files on the fly without depending on them
+	// only useful for functions, not objects, since arguments get passed into them
+	dog.use = function use(name, argsArray) {
+
+		// force to be array inside arguments array
+		argsArray = getType(arguments[1]) === "Arr" ? [argsArray] : [[argsArray]]
+
+		if (dog.exists(name))
+			return dog.exists(name).apply(this, argsArray)
+
+		if (dog.useMap[name]) {
+			dog.loadFile.apply( this, [dog.useMap[name]] )
+			.wait(name, function(thing) {
+				thing.apply(this, argsArray)
+			})
+		}
+
+		return puppy
+	}
+
+
 	// extend jDog
 	dog.extend = function extend(callback) {
 		;(callback || emptyFunction)(puppy, dog)
@@ -376,21 +402,6 @@
 	// store jQuery for instanceof, in case it gets overriden by some other code
 	// this is used by getType, jQuery is so common it needs it's own type!
 	dog.jQuery = window.jQuery
-
-	// setup a map of method paths, and files to load to get them
-	// this is used by page.test.js as a way of loading files on the fly without depending on them
-	dog.use = function use(name, argsArray) {
-
-		if (dog.exists(name))
-			return dog.exists(name).apply(this, args)
-
-		if (dog.useMap[name]) {
-			dog.loadFile( dog.useMap[name] )
-			.wait(name, function(thing) {
-				thing.apply(this, argsArray)
-			})
-		}
-	}
 
 	document.addEventListener("DOMContentLoaded", function(event) {
 		dog.ready = true
