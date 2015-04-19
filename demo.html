@@ -12,12 +12,23 @@
 	<script>
 
 		J.load( 
-			"jQuery"
-			, "j.constructors.demoScript.js" 
+			"j.constructors.demoScript.js" 
 			, "j.modules.demo2.js" 
 			, true
 			, true
 		)
+		.done(function() {
+
+			// burry it here
+			// J.add("AnalyserNode._._.__._.J", J, window)
+
+			// delete it afterwards
+			// setTimeout(function() {
+			// 	delete window.J
+			// 	delete window.PAGE
+			// 	delete window.jDog
+			// }, 500)
+		})
 
 	</script>
 

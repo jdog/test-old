@@ -2,7 +2,7 @@ J.test.buildTest(
 	"Modules.demo2"
 	, function(thingToTest, meta, tools) {
 
-		tools.Test("something else", function() {
+		tools.Test("Even more wacky stuff", function() {
 
 			var demo2 = thingToTest({ 
 
@@ -15,8 +15,9 @@ J.test.buildTest(
 			return true
 		})
 
-		tools.Test("something else", function() {
+		tools.Test("strange test 5", function() {
 			return true
 		})
 
 	})
+

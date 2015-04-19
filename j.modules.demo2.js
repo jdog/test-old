@@ -1,6 +1,6 @@
 J.addWait(
 	"Modules.demo2"
-	, [ "Constructors.DemoScript" ]
+	, [ "Constructors.DemoConstructor" ]
 	, function (ref) {
 	
 	var dog = {
@@ -17,10 +17,7 @@ J.addWait(
 
 	function god() {
 		console.log("123")
-
-		debugger
-
-		dog.demoConstructor = ref.DemoScript()
+		dog.demoConstructor = ref.DemoConstructor()
 	}
 
 	god()
@@ -28,4 +25,4 @@ J.addWait(
 	return dog
 
 })
-.use("test.attach", "j.modules.demo2.test.js")
+.use("test.attach", "j.modules.demo2.test.js", "j.modules.demo2.test2.js")

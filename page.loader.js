@@ -167,6 +167,8 @@
 			, count = 0
 			, ref = ref || {}
 
+		ref.J = ref.PAGE = puppy
+
 		if (!arr.length) {
 			(callback || emptyFunction)(ref)
 			return puppy
@@ -182,8 +184,6 @@
 					(callback || emptyFunction)(ref)
 			}, source)
 		}(x, arr))
-
-		ref.jDog = ref.J = puppy
 
 		return puppy
 	}
@@ -202,6 +202,8 @@
 		if (map.Str) arr = map.Str
 		if (map.Obj) ref = map.Obj[0]
 		if (map.Arr) arr.concat(map.Str)
+
+		ref.J = ref.PAGE = puppy
 
 		batchWaitRef(arr, ref, callback, source)
 		return puppy
@@ -250,6 +252,8 @@
 		var ref = { }
 		, snap = takeSnap(path, fun, null, arrayOfRequiredLibraries, ref)
 
+		ref.J = ref.PAGE = puppy
+
 		batchWaitRef(arrayOfRequiredLibraries, ref, function(ref) {
 			snap.thing = fun(ref)
 			dog.add(path, snap.thing, puppy, true)
@@ -263,6 +267,8 @@
 
 		var ref = { }
 		, snap = takeSnap(path, fun, null, arrayOfRequiredLibraries, ref)
+
+		ref.J = ref.PAGE = puppy
 
 		dog.waitExists("jQuery", window, function() {
 			window.jQuery(d).ready(function() {
@@ -371,7 +377,10 @@
 	// setup a map of method paths, and files to load to get them
 	// this is used by page.test.js as a way of loading files on the fly without depending on them
 	// only useful for functions, not objects, since arguments get passed into them
-	dog.use = function use(name, argsArray) {
+	dog.use = function use(/* name, argsArray */) {
+
+		var map = mapArguments(arguments)
+		, name = map.Str[0]
 
 		// cloning this way to avoid the object mutating due to waiting
 		var lastSnap = (function cheapClone() {
@@ -381,9 +390,9 @@
 		}())
 
 		// force to be array inside arguments array
-		var argsArray = getType(arguments[1]) === "Arr" ? 
-			[lastSnap, argsArray] 
-			: [lastSnap, [argsArray]]
+		var argsArray = map.Arr ?
+			[lastSnap, map.Arr] 
+			: [lastSnap, map.Str.slice(1)]
 
 		if (dog.exists(name))
 			return dog.exists(name).apply(this, argsArray)
