@@ -19,31 +19,48 @@
 	* SEE https://jdog.io for all documentation
 	*/
 
-	var JDog = function(){}                  // base constructor
-		, dog = JDog.prototype = { logs : {} } // base prototype
-		, puppy = new JDog()                   // base instance
-		, speedOfInterval = 50                 // speed of interval
-		, finishedCallbacks = []               // array of callbacks to run when everything is loaded
-		, done = dog.done = function(func) {   // method to add to finished callback
-			finishedCallbacks.push(func)
+	var timerText = "finished loading"
+
+	if (window.console) {
+		console.groupCollapsed("%c🃟%cJ%cDOҨ", "font-size:60px; font-weight:400 ", "padding-left:5px; font-size:55px; font-weight:400 ", "font-size:55px; color:rgb(117,228,29); padding-right:10px; font-weight:400 ")
+		console.time(timerText)
+	}
+
+	var JDog = function(){}                          // base constructor
+		, dog = JDog.prototype = { logs : {}, _ : {} } // base prototype
+		, puppy = new JDog()                           // base instance
+		, speedOfInterval = 30                         // speed of interval
+		, finishedCallbacks = []                       // array of callbacks to run when everything is loaded
+		, onceCallbacks = []
+		, done = dog.done = function(func, onceCB) {   // method to add to finished callback
+			if (func)
+				finishedCallbacks.push(func)
+			if (onceCB)
+				onceCallbacks.push(onceCB)
 		}
+		, d = document
+		, snap = dog._.snap = {}
 		, emptyFunction = new Function()
 		, loadList = dog.logs.loaded  = { }    // list all loaded libraries (and where they were used)
 		, waitList = dog.logs.waitQue = { }    // show the loading que, unloaded show as false
 		, waitMap  = dog.logs.waitMap = { }    // reverse look at logs.loaded
-		, lastPath = dog._lastPath    = ""
-		, lastAdd  = dog._lastAdd     = ""
 		, scriptNumber = 0
+		, useMap = dog._.useMap = {} // see dog.use
 
 	// if you call this named function with use, load this script then wait and run it
-	dog._useMap = {} // see dog.use
-	dog._t = "jdogTest/"
-	var testMethods = String("test.info,test.runTest,test.run").split(',')
-	dog._useMap["test.attach"] = dog._t + "j.test.attach.js"
-	dog._useMap["test.setTests"] = dog._t + "j.test.attach.js"
+	dog._.t = "jdogTest/"
+	useMap["test.attach"] = useMap["test.setTests"] = dog._.t + "j.test.attach.js"
+	useMap["jQuery"] = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"
 
-	while(testMethods.length)
-		dog._useMap[ testMethods.shift() ] = dog._t + "j.test.js"
+	dog.done(null, function() {
+		if (!window.console) return
+		console.dir(J)
+		console.timeEnd(timerText)
+		console.groupEnd()
+	})
+
+	for (var tm = String("test.info,test.runTest,test.run").split(','); tm.length;)
+		useMap[ tm.shift() ] = dog._.t + "j.test.js"
 
 	// all existential queries are run through here, this is the foundation of the whole thing
 	var ex = dog.exists = function (path, base, alternate) {
@@ -74,7 +91,7 @@
 	var waitExists = dog.waitExists = function(/* path, base, func, sourcePath */) {
 		var thing
 			, arg = arguments
-			, limit = 100
+			, limit = 500
 			, count = 0
 			, interval
 			, base, func, sourcePath
@@ -191,16 +208,13 @@
 	}
 
 	// all adding is done using this
-	dog.add = function (path, thing, base) {
-
-		// passing this in, so returned J gets it
-		dog._lastPath = path
-		dog._lastAdd = thing
+	dog.add = function (path, thing, base, silent) {
 
 		if (typeof path === "undefined" || typeof path === "object") return
 		var arr = path.split(".")
 			, x = 0
 			, obj = base || puppy // again, for exporting this function change puppy
+			, snap = !silent ? takeSnap(path, null, thing, null, null) : null
 
 		if (arr.length < 1) return
 
@@ -221,31 +235,15 @@
 	}
 
 
-	// add, for jQuery fans
-	dog.add$ = function add$(path, thing) {
-		var args = arguments
-
-		dog._lastPath = path
-		dog._lastAdd = thing
-
-		dog.waitExists("jQuery", window, function jQueryLoaded () {
-			window.jQuery(document).ready(function documentReady () {
-				dog.add.apply(thing, args)
-			})
-		})
-
-		return puppy
-	}
-
-
 	// gather all of the required libraries in an array, push them into object, then callback( obj -- ref )
 	dog.addWait = function addWait (path, arrayOfRequiredLibraries, fun) {
 
-		dog._lastPath = path
-		dog._lastAdd = fun
+		var ref = { }
+		, snap = takeSnap(path, fun, null, arrayOfRequiredLibraries, ref)
 
-		batchWaitRef(arrayOfRequiredLibraries, {}, function(ref) {
-			dog.add(path, fun(ref))
+		batchWaitRef(arrayOfRequiredLibraries, ref, function(ref) {
+			snap.thing = fun(ref)
+			dog.add(path, snap.thing, puppy, true)
 		}, path)
 		return puppy
 	}
@@ -254,13 +252,14 @@
 	// gather all of the required libraries in an array, push them into the anonymous function
 	dog.addWait$ = function addWait$(path, arrayOfRequiredLibraries, fun) {
 
-		dog._lastPath = path
-		dog._lastAdd = fun
+		var ref = { }
+		, snap = takeSnap(path, fun, null, arrayOfRequiredLibraries, ref)
 
 		dog.waitExists("jQuery", window, function() {
-			window.jQuery(document).ready(function() {
-				batchWaitRef(arrayOfRequiredLibraries, {}, function(ref) {
-					dog.add(path, fun(ref))
+			window.jQuery(d).ready(function() {
+				batchWaitRef(arrayOfRequiredLibraries, ref, function(ref) {
+					snap.thing = fun(ref)
+					dog.add(path, snap.thing, puppy, true)
 				}, path)
 			})
 		})
@@ -271,7 +270,7 @@
 
 
 	// get the type of anything. Common types are shortened
-	var getType = dog.getType = function getType(thing){
+	var getType = dog.getType = function getType(thing) {
 		var shorten = "StringBooleanArrayObjectNumberFunction"
 			, ret
     if(thing===null) return "Null"
@@ -283,6 +282,14 @@
 			return ret
 	}
 
+	function takeSnap(path, fun, thing, waitList, ref) {
+		snap.path = path
+		snap.fun = fun
+		snap.thing = thing
+		snap.waitList = waitList
+		snap.ref = ref
+		return snap
+	}
 
 	// internal function to add to array
 	function pushInObj(name, item, obj) {
@@ -301,25 +308,36 @@
 		return map
 	}
 
-
 	// method for loading files, currently not used for waiting
-	var loadFile = dog.loadFile = function loadFile (/* pathToFile, allowCache */) {
+	var load = dog.load = function load (/* pathToFile, allowCache */) {
 
 		var map = dog.mapArguments(arguments)
-			, allowCache = map.Boo ? map.Boo[0] : false
+			, overwrite = map.Boo ? map.Boo[0] : false
+			, allowCache = map.Boo ? map.Boo[1] : false
 
 		if (!map.Str) return puppy
 		if (map.Str.length > 1) {
-			for (var x in map.Str) loadFile(map.Str[x], allowCache)
+			for (var x in map.Str) load(map.Str[x], allowCache)
 			return puppy
 		}
 
 		var pathToFile = map.Str[0]
-			, type = pathToFile.slice(-3).toLowerCase()
+
+		if (useMap[pathToFile]) {
+			return load( useMap[pathToFile] )
+		}
+
+		var type = pathToFile.slice(-3).toLowerCase()
 			, fileId = pathToFile.replace(/\./g,"_").replace(/\//g, "_").replace(":","")
-			, existingElm = document.getElementById(fileId)
-			, increment = allowCache ? scriptNumber++ : String((Math.random() * 1000)).replace(/\./,"")
-			, fileref = document.createElement( type === "css" ? 'link' : "script"  )
+			, existingElm = d.getElementById(fileId)
+
+		if (existingElm && !overwrite) {
+			return puppy
+		}
+
+		var increment = allowCache ? scriptNumber++ : String((Math.random() * 1000)).replace(/\./,"").substr(0,3)
+			, fileref = d.createElement( type === "css" ? 'link' : "script"  )
+
 
 		if (type === "css") {
 			fileref.rel = "stylesheet"
@@ -335,31 +353,34 @@
 		if (existingElm)
 			existingElm.parentElement.removeChild(existingElm)
 
-		document.getElementsByTagName("head")[0].appendChild(fileref)
+		d.getElementsByTagName("head")[0].appendChild(fileref)
 
 		return puppy
 
 	}
-
 
 	// setup a map of method paths, and files to load to get them
 	// this is used by page.test.js as a way of loading files on the fly without depending on them
 	// only useful for functions, not objects, since arguments get passed into them
 	dog.use = function use(name, argsArray) {
 
-		var lastAdd = dog._lastAdd
-			, lastPath = dog._lastPath
+		// cloning this way to avoid the object mutating due to waiting
+		var lastSnap = (function cheapClone() {
+			var clone = {}
+			for (var x in snap) clone[x] = snap[x]
+			return clone
+		}())
 
 		// force to be array inside arguments array
 		var argsArray = getType(arguments[1]) === "Arr" ? 
-			[lastAdd, lastPath, argsArray] 
-			: [lastAdd, lastPath, [argsArray]]
+			[lastSnap, argsArray] 
+			: [lastSnap, [argsArray]]
 
 		if (dog.exists(name))
 			return dog.exists(name).apply(this, argsArray)
 
-		if (dog._useMap[name]) {
-			dog.loadFile.apply( this, [dog._useMap[name]] )
+		if (useMap[name]) {
+			load.apply( this, [useMap[name]] )
 			.wait(name, function(thing) {
 				thing.apply(this, argsArray)
 			})
@@ -380,6 +401,8 @@
 	function runFinishedCallbacks() {
 		if (checkWaitingList()) return
 		for (var x in finishedCallbacks) finishedCallbacks[x](puppy, dog)
+		while(onceCallbacks.length) 
+			onceCallbacks.shift()(J)
 	}
 
 
@@ -407,13 +430,13 @@
 
 	// store jQuery for instanceof, in case it gets overriden by some other code
 	// this is used by getType, jQuery is so common it needs it's own type!
-	dog._jQuery = window.jQuery
+	dog._.jQuery = window.jQuery
 
-	document.addEventListener("DOMContentLoaded", function(event) {
+	d.addEventListener("DOMContentLoaded", function(event) {
 		dog.ready = true
   })
 
-	dog._version = "3.0.0"
+	dog._.version = "3.0.0"
 
 	// jDog and J are psynonymous
 	window.PAGE = window.J = window.jDog = puppy
