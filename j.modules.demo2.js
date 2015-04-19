@@ -12,10 +12,15 @@ J.addWait(
 				thatHasThis : true
 			}
 		}
+		, demoConstructor : null
 	}
 
 	function god() {
 		console.log("123")
+
+		debugger
+
+		dog.demoConstructor = ref.DemoScript()
 	}
 
 	god()

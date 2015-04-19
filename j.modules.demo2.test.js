@@ -4,9 +4,13 @@ J.test.buildTest(
 
 		tools.Test("something else", function() {
 
-			var demo2 = thingToTest({  /* mock stuff here */ })
+			var demo2 = thingToTest({ 
 
-			debugger
+				DemoScript : function() {
+					return { /* our mock object */ }
+				}
+
+			})
 
 			return true
 		})
