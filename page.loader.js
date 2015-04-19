@@ -1,7 +1,6 @@
-/* jDog is way of organizing javascript based apps. 
+/* jDog is way of organizing javascript based apps of small to immense complexity.
 * Works great across pages, or in single page apps, extensions, etc etc.
-* Can replace or work with libraries like require.js
-* Works great with other libraries like jQuery.
+* Can replace or work with other libraries like require.js and jQuery
 * Small by design.
 * SEE https://jdog.io
 * Created by Justin Kempton
@@ -10,53 +9,57 @@
 */
 ;(function() {
 
-	/* 
-	* the point of jDog is to be able to simplify development of javascript with the console.
-	* Specifically by organizing everything into one common easily accessible global variable.
-	* 
+	/*
+	* the point of jDog is to be able to simplify development of javascript with the chrome console.
+	* Specifically by organizing everything into one common easily accessible global variable called J or PAGE.
+	*
 	* For convenience (window.PAGE, window.J, and window.jDog are interchangeable.
 	*
 	* SEE https://jdog.io for all documentation
 	*/
 
 	var timerText = "finished loading"
+		, emptyFunction = new Function()
 
-	if (window.console) {
+	function ifConsole(fun) {
+		if (!window.console) return
+		;(fun || emptyFunction)()
+	}
+
+	ifConsole( function() {
 		console.groupCollapsed("%c🃟%cJ%cDOҨ", "font-size:60px; font-weight:400 ", "padding-left:5px; font-size:55px; font-weight:400 ", "font-size:55px; color:rgb(117,228,29); padding-right:10px; font-weight:400 ")
 		console.time(timerText)
-	}
+	})
 
 	var JDog = function(){}                          // base constructor
 		, dog = JDog.prototype = { logs : {}, _ : {} } // base prototype
 		, puppy = new JDog()                           // base instance
-		, speedOfInterval = 30                         // speed of interval
-		, finishedCallbacks = []                       // array of callbacks to run when everything is loaded
+		, speedOfInterval = 30                         // speed of interval called during waiting
+		// , finishedCallbacks = []                       // array of callbacks to run when everything is loaded
 		, onceCallbacks = []
-		, done = dog.done = function(func, onceCB) {   // method to add to finished callback
-			if (func)
-				finishedCallbacks.push(func)
-			if (onceCB)
-				onceCallbacks.push(onceCB)
-		}
 		, d = document
 		, snap = dog._.snap = {}
-		, emptyFunction = new Function()
 		, loadList = dog.logs.loaded  = { }    // list all loaded libraries (and where they were used)
 		, waitList = dog.logs.waitQue = { }    // show the loading que, unloaded show as false
 		, waitMap  = dog.logs.waitMap = { }    // reverse look at logs.loaded
-		, scriptNumber = 0
-		, useMap = dog._.useMap = {} // see dog.use
+		, scriptNumber = 0                     // used while loading css / scripts
+		, useMap = dog._.useMap = {}           // see dog.use, loads then applys function with parameters
 
 	// if you call this named function with use, load this script then wait and run it
-	dog._.t = "jdogTest/"
+	dog._.t = "jdogTest/"                    // base url for testScripts
 	useMap["test.attach"] = useMap["test.setTests"] = dog._.t + "j.test.attach.js"
 	useMap["jQuery"] = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"
 
-	dog.done(null, function() {
-		if (!window.console) return
-		console.dir(J)
-		console.timeEnd(timerText)
-		console.groupEnd()
+	dog.done = function(onceCB) {   // method to add to finished callback
+		onceCallbacks.push( onceCB || emptyFunction )
+	}
+
+	dog.done(function() {
+		ifConsole(function() {
+			console.dir(J)
+			console.timeEnd(timerText)
+			console.groupEnd()
+		})
 	})
 
 	for (var tm = String("test.info,test.runTest,test.run").split(','); tm.length;)
@@ -71,7 +74,7 @@
 
 		var arr = path.split(".")
 			, x = 0
-			, obj = base || puppy // if you want to export this function, change puppy to any default 
+			, obj = base || puppy // if you want to export this function, change puppy to any default
 
 		if (arr.length < 1) return alternate
 
@@ -80,7 +83,7 @@
 			if (obj === undefined || obj === null) return alternate
 			x++
 		}
-		if (typeof obj !== "undefined") 
+		if (typeof obj !== "undefined")
 			return obj
 		else
 			return alternate
@@ -134,8 +137,11 @@
 		interval = setInterval(function() {
 			count++
 			if (count > limit) {
-				console.trace("could not find " + path)
-				// console.error("could not find " + path)
+
+				ifConsole(function() {
+					console.error("could not find " + path)
+				})
+
 				clearInterval(interval)
 				return
 			}
@@ -162,6 +168,7 @@
 
 	// internal function to load array elements
 	var batchWaitRef = function(arr, ref, callback, source) {
+
 
 		var source = getFuncName(source, arguments)
 			, count = 0
@@ -192,7 +199,7 @@
 	// split out items from arguments into array
 	var batchWait = function(/* str, str2, str3, obj, callback */) {
 
-		var arr = [] 
+		var arr = []
 			, ref = {}
 			, map = mapArguments(arguments)
 			, source = getFuncName("", arguments, map)
@@ -391,7 +398,7 @@
 
 		// force to be array inside arguments array
 		var argsArray = map.Arr ?
-			[lastSnap, map.Arr] 
+			[lastSnap, map.Arr]
 			: [lastSnap, map.Str.slice(1)]
 
 		if (dog.exists(name))
@@ -417,11 +424,8 @@
 
 	// internal function calling all done callbacks when everything is finished loading
 	function runFinishedCallbacks() {
-		while(onceCallbacks.length) 
+		while(!checkWaitingList() && onceCallbacks.length)
 			onceCallbacks.shift()(J)
-
-		if (checkWaitingList()) return
-		for (var x in finishedCallbacks) finishedCallbacks[x](puppy, dog)
 	}
 
 
@@ -429,11 +433,11 @@
 	// we are using callee.caller here, this feature is being pushed out of javascript in ES5. What a shame when smart people take away cool features
 	function getFuncName(source, args, map) {
 		map = map || mapArguments(args)
-		source = source 
-			|| ex("callee.caller.name", args) 
-			|| ex("callee.caller.caller.name", args) 
-			|| ex("Fun.1.name", map) 
-			|| ex("Fun.0.name", map) 
+		source = source
+			|| ex("callee.caller.name", args)
+			|| ex("callee.caller.caller.name", args)
+			|| ex("Fun.1.name", map)
+			|| ex("Fun.0.name", map)
 			|| "anonymous"
 		return source
 	}
@@ -452,13 +456,13 @@
 	dog._.jQuery = window.jQuery
 
 	d.addEventListener("DOMContentLoaded", function(event) {
-		dog.ready = true
+		dog.DomContentLoaded = true
   })
 
-	dog._.version = "3.0.0"
+	dog._.version = "3.1.0"
 
 	// jDog and J are psynonymous
-	window.PAGE = window.J = window.jDog = puppy
+	window.PAGE = window.J = puppy
 
 }())
 

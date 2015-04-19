@@ -2,7 +2,7 @@ J.addWait(
 	"Modules.demo2"
 	, [ "Constructors.DemoConstructor" ]
 	, function (ref) {
-	
+
 	var dog = {
 		someNumber : 1234
 		, someObj : {
@@ -15,12 +15,12 @@ J.addWait(
 		, demoConstructor : null
 	}
 
-	function god() {
+	function devil() {
 		console.log("123")
 		dog.demoConstructor = ref.DemoConstructor()
 	}
 
-	god()
+	devil()
 
 	return dog
 

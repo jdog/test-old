@@ -5,7 +5,6 @@ J.addWait(
 	
 		return function DemoConstructor (e_root, options) {
 
-
 			var dog = {
 				someNumber : 1234
 				, someObj : {
@@ -23,7 +22,6 @@ J.addWait(
 			function god() {
 				console.log("123")
 				ref.AnalyserNode
-				debugger
 			}
 
 			// lazy load only on instantiation
