@@ -1,6 +1,6 @@
 J.addWait(
 	"Modules.demo2"
-	, [ /* nothing to wait for yet */ ]
+	, [ "Constructors.DemoScript" ]
 	, function (ref) {
 	
 	var dog = {

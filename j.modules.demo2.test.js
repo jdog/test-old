@@ -1,12 +1,17 @@
 J.test.buildTest(
 	"Modules.demo2"
-	, function(meta, Test, TestWaiter, tools) {
+	, function(thingToTest, meta, tools) {
 
-		Test("something else", function() {
+		tools.Test("something else", function() {
+
+			var demo2 = thingToTest({  /* mock stuff here */ })
+
+			debugger
+
 			return true
 		})
 
-		Test("something else", function() {
+		tools.Test("something else", function() {
 			return true
 		})
 

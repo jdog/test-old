@@ -326,7 +326,7 @@
 
 		if (!map.Str) return puppy
 		if (map.Str.length > 1) {
-			for (var x in map.Str) load(map.Str[x], allowCache)
+			for (var x in map.Str) load(map.Str[x], overwrite, allowCache)
 			return puppy
 		}
 
@@ -408,10 +408,11 @@
 
 	// internal function calling all done callbacks when everything is finished loading
 	function runFinishedCallbacks() {
-		if (checkWaitingList()) return
-		for (var x in finishedCallbacks) finishedCallbacks[x](puppy, dog)
 		while(onceCallbacks.length) 
 			onceCallbacks.shift()(J)
+
+		if (checkWaitingList()) return
+		for (var x in finishedCallbacks) finishedCallbacks[x](puppy, dog)
 	}
 
 
