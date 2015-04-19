@@ -210,10 +210,19 @@
 	// all adding is done using this
 	dog.add = function (path, thing, base, silent) {
 
+		var defaultBase
+
+		if (path.substr(0,1) === "~") {
+			defaultBase = dog
+			path = path.substr(1)
+		} else {
+			defaultBase = puppy
+		}
+
 		if (typeof path === "undefined" || typeof path === "object") return
 		var arr = path.split(".")
 			, x = 0
-			, obj = base || puppy // again, for exporting this function change puppy
+			, obj = base || defaultBase // again, for exporting this function change puppy
 			, snap = !silent ? takeSnap(path, null, thing, null, null) : null
 
 		if (arr.length < 1) return
