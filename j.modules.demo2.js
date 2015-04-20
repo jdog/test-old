@@ -16,7 +16,6 @@ J.addWait(
 	}
 
 	function devil() {
-		console.log("123")
 		dog.demoConstructor = ref.DemoConstructor()
 	}
 

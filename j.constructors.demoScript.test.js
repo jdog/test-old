@@ -1,44 +1,21 @@
 J.test.buildTest(
 	"Constructors.DemoConstructor"
-	, function(thingToTest, meta, tools) {
+	, function(thingToTest, ref, tools) {
 
-	// use meta.ref to continue to use external libraries
-	// to mock the passed in libraries create a new object like so
+	// use ref as is to continue to use external libraries.
+	// To mock libraries create a new object or
+	// simply modify the ref properties to suit your needs
 
-	var mockRef = {
-		J : J
-		, PAGE : J
-	}
-
-	tools.Test("Dummy Test", function() {
+	tools.Test("Build Constructor", function() {
 		// var demo = thingToTest(meta.ref)
-		var demo = thingToTest(mockRef)
+		var demo = thingToTest(ref)
 			, constr = demo()
-		return true
+		return !!constr
 	})
 
-	tools.Test("Dummy Test 2", function() {
-		var demo = thingToTest(mockRef)
-			, constr = demo()
-		return true
-	})
+	tools.TestWaiter("Series of tests, async", function(series, go, call) {
 
-	tools.Test("Dummy Test 2", function() {
-		var demo = thingToTest(mockRef)
-			, constr = demo()
-		return true
-	})
-
-	tools.Test("Dummy Test 2", function() {
-		var demo = thingToTest(mockRef)
-			, constr = demo()
-		return tools.objectCompare(demo, {
-		})
-	})
-
-	tools.TestWaiter("Dummy Test 3", function(series, go, call) {
-
-		var demo = thingToTest(mockRef)
+		var demo = thingToTest(ref)
 			, constr = demo()
 
 		series.push(function() {
@@ -47,7 +24,7 @@ J.test.buildTest(
 		})
 
 		series.push(function() {
-			call({ name : "example 2", result : false  })
+			call({ name : "example 2", result : !!constr  })
 			go()
 		})
 

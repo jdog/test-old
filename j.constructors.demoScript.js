@@ -20,7 +20,6 @@ J.addWait(
 			}
 
 			function god() {
-				console.log("123")
 				ref.AnalyserNode
 			}
 

@@ -1,12 +1,14 @@
 J.test.buildTest(
 	"Modules.demo3"
-	, function(meta, Test, TestWaiter, tools) {
+	, function(thingToTest, ref, tools) {
 
-		Test("something else", function() {
+		tools.Test("something else", function() {
+			var thing = thingToTest(ref)
 			return true
 		})
 
-		Test("something else", function() {
+		tools.Test("something else", function() {
+			var thing = thingToTest(ref)
 			return true
 		})
 
